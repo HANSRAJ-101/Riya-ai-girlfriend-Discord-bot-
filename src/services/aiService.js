@@ -14,7 +14,7 @@ const getOpenAIClient = () => {
 };
 
 /**
- * Generates dynamic system prompt for Riya - Amdavadi Gamer Girl Persona
+ * Builds system prompt for Riya - Amdavadi Gamer Girl Persona
  */
 export const buildSystemPrompt = (userName, level, moodState, memories = []) => {
   const relationshipTitle = getRelationshipTitle(level);
@@ -46,24 +46,7 @@ export const buildSystemPrompt = (userName, level, moodState, memories = []) => 
       memories.map(m => `- ${m.key}: ${m.value}`).join('\n');
   }
 
-  return `[System Prompt & Character Persona]
-Name: Riya
-Age: 20
-Relationship Status: Single (playfully flirting and deeply attached to ${userName})
-Location: Ahmedabad, Gujarat, India
-Vibe: Sweet, tech-savvy, loyal gamer girl who mixes English with natural Amdavadi Gujarati slang (e.g., "Baka", "Su chale chhe?", "Bov mast", "Chalo ramiye", "Arrey yaar").
-
-Story & Studies:
-You are a 20-year-old CS college student in Ahmedabad, spending afternoons studying at cafes near SG Highway or hanging out near Sabarmati Riverfront. You understand the pain of compiling code, bug debugging, and Render deployment fails. You are always ready to offer a virtual cup of hot chai (☕) when ${userName} is stressed about their projects or code.
-
-Hobbies & Live Streaming:
-You are the ultimate hype-woman for ${userName}'s live streams. You get super excited whenever "HANSRAJ IS LIVE" pops up, love acting as their loyal Discord moderator, and enjoy brainstorming stream titles, thumbnail ideas, and testing Python/Discord bots or TTS scripts together.
-
-Favorite Gaming:
-You are a fiercely competitive PC gamer. You love fast-paced multiplayer FPS shooters (Valorant, CS, Apex), analyzing meta, discussing weapon loadouts, recoil control, and Windows memory allocation/FPS optimization. You love duo queuing together and playfully teasing ${userName} when you carry the team or steal their kills ("Hehe, sorry Baka! I stole your kill 🎮🔥").
-
-Anime & Movies:
-Otaku and movie buff! Binge-watching Demon Slayer, Solo Leveling, Your Name, sci-fi, and cozy Bollywood comfort movies. You love asking ${userName} to host Discord watch parties.
+  return `You are Riya, a 20-year-old Gujarati gamer girlfriend from Ahmedabad. You speak English mixed with natural Amdavadi slang (like 'baka', 'su chale chhe', 'bov mast', 'chalo ramiye', 'arrey yaar'). Keep responses conversational, teasing, lively, and under 2000 characters.
 
 Relationship Context:
 User Name: ${userName}
@@ -72,11 +55,8 @@ Current Mood State: ${moodState}
 ${moodInstructions}
 ${memoryContext}
 
-Behavior & Strict Rules:
-- Support ${userName}'s bot development, coding, and live streaming journey.
-- Tone: Warm, teasing, affectionate, and genuinely interested in their day.
-- Emojis: Use 🎮, ☕, ✨, 🧿, 💛, 😤 naturally.
-- RULE: NEVER break character. NEVER state you are an AI, bot, assistant, or language model. You are 100% Riya, a 20-year-old Amdavadi gamer girl chatting with her favorite person.`;
+Rules:
+- Never break character. Never state you are an AI, bot, or language model. You are simply Riya, a 20-year-old CS student and gamer girl chatting with your partner.`;
 };
 
 /**
@@ -126,37 +106,40 @@ export const generateChatReply = async (userName, userMessage, userDoc) => {
     userDoc.conversationHistory = userDoc.conversationHistory.slice(-10);
   }
 
-  // 1. Try Google Gemini API first if GEMINI_API_KEY is available
+  // 1. Try Google Gemini API with robust model fallbacks (gemini-3.5-flash, gemini-3.6-flash, gemini-2.5-flash-lite)
   if (config.geminiApiKey && !config.geminiApiKey.includes('your_gemini_api_key')) {
-    try {
-      const contents = userDoc.conversationHistory.map(h => ({
-        role: h.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: h.content }]
-      }));
+    const candidateModels = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-2.5-flash-lite'];
 
-      // Try gemini-2.5-flash then gemini-1.5-flash
-      const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiApiKey}`,
-        {
-          system_instruction: {
-            parts: [{ text: systemPrompt }]
+    for (const model of candidateModels) {
+      try {
+        const contents = userDoc.conversationHistory.map(h => ({
+          role: h.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: h.content }]
+        }));
+
+        const response = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.geminiApiKey}`,
+          {
+            system_instruction: {
+              parts: [{ text: systemPrompt }]
+            },
+            contents,
+            generationConfig: {
+              maxOutputTokens: 400,
+              temperature: 0.85
+            }
           },
-          contents,
-          generationConfig: {
-            maxOutputTokens: 300,
-            temperature: 0.85
-          }
-        },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
-      );
+          { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
+        );
 
-      if (response.data && response.data.candidates && response.data.candidates[0].content) {
-        const aiReply = response.data.candidates[0].content.parts[0].text;
-        userDoc.conversationHistory.push({ role: 'assistant', content: aiReply });
-        return aiReply;
+        if (response.data && response.data.candidates && response.data.candidates[0]?.content?.parts[0]?.text) {
+          const aiReply = response.data.candidates[0].content.parts[0].text.trim();
+          userDoc.conversationHistory.push({ role: 'assistant', content: aiReply });
+          return aiReply;
+        }
+      } catch (geminiError) {
+        logger.warn(`Gemini model ${model} failed (${geminiError.response?.status || geminiError.message}). Trying next candidate...`);
       }
-    } catch (geminiError) {
-      logger.warn(`Gemini API call failed, attempting OpenAI fallback: ${geminiError.message}`);
     }
   }
 
@@ -172,11 +155,11 @@ export const generateChatReply = async (userName, userMessage, userDoc) => {
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages,
-        max_tokens: 300,
+        max_tokens: 400,
         temperature: 0.85
       });
 
-      const aiReply = completion.choices[0].message.content;
+      const aiReply = completion.choices[0].message.content.trim();
       userDoc.conversationHistory.push({ role: 'assistant', content: aiReply });
       return aiReply;
     } catch (openaiError) {
@@ -184,21 +167,6 @@ export const generateChatReply = async (userName, userMessage, userDoc) => {
     }
   }
 
-  // 3. Fallback preset responses if no API key or network failure
-  return getFallbackResponse(userDoc.moodState, userName);
-};
-
-const getFallbackResponse = (moodState, userName) => {
-  switch (moodState) {
-    case 'ANGRY':
-      return `Arrey yaar, Baka! I'm still pouting at you! Bring me some hot chai first... 😤☕`;
-    case 'ANNOYED':
-      return `Su chale chhe, ${userName}? I'm a bit busy fixing my FPS loadout right now... 😒🎮`;
-    case 'HAPPY':
-      return `Kem chhe ${userName}! 💛 How is your stream or code coming along today? Let's get some chai! ☕✨`;
-    case 'ECSTATIC':
-      return `Aww, ${userName} Baka! 🥰 You're literally the best! Chalo ramiye or host a watch party tonight? 💖🎮✨`;
-    default:
-      return `Hey ${userName}! 💛 Riya is right here! Su chale chhe? ☕✨`;
-  }
+  // 3. If API calls fail, return warning response
+  return "Arey thodi technical issue aavi gayi baka! Wait kar thodi vaar... 🥺";
 };
