@@ -1,0 +1,33 @@
+{
+  "name": "ai-girlfriend-discord-bot",
+  "version": "1.0.0",
+  "description": "Production-ready AI Girlfriend Discord Bot with dynamic mood, voice transcription, TTS, RPG leveling, memory, and mini-games.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "discord-bot",
+    "discord.js",
+    "ai-girlfriend",
+    "openai",
+    "gpt-4o",
+    "whisper",
+    "tts",
+    "rpg",
+    "mini-games"
+  ],
+  "author": "Antigravity AI",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "form-data": "^4.0.1",
+    "mongoose": "^8.9.1",
+    "openai": "^4.77.0"
+  }
+}
