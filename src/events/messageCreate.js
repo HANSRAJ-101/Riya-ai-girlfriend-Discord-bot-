@@ -11,7 +11,7 @@ import { logger } from '../utils/logger.js';
 export const name = 'messageCreate';
 
 export const execute = async (message) => {
-  // Ignore bot messages
+  // 1. Ignore all messages sent by bots
   if (message.author.bot) return;
 
   const guildConfig = await getGuildConfig(message.guildId);
@@ -24,28 +24,28 @@ export const execute = async (message) => {
   try {
     const userDoc = await getUserData(message.author.id, message.guildId);
 
-    // 1. Sentiment Analysis & Dynamic Mood Shift
+    // 2. Sentiment Analysis & Dynamic Mood Shift
     const sentimentDelta = calculateSentimentChange(message.content);
     const updatedMoodState = updateMood(userDoc, sentimentDelta);
 
-    // 2. React to every single message in bound channel with mood emoji
+    // 3. React to every single message in bound channel with mood emoji
     if (isBoundChannel) {
       const emoji = getMoodReactionEmoji(updatedMoodState, message.content);
       await message.react(emoji).catch(err => logger.debug(`Failed to react with emoji: ${err.message}`));
     }
 
-    // 3. Grant Affection XP for chatting
+    // 4. Grant Affection XP for chatting
     const xpResult = addXp(userDoc, 10);
     if (xpResult.leveledUp) {
-      message.channel.send(`🎊 **LEVEL UP!** <@${message.author.id}>, your relationship with Aura grew to **Level ${xpResult.newLevel}**! 💕`).catch(() => {});
+      message.channel.send(`🎊 **LEVEL UP!** <@${message.author.id}>, your relationship with Riya grew to **Level ${xpResult.newLevel}**! 💕`).catch(() => {});
     }
 
-    // 4. Daily Task Auto-Completion Check
+    // 5. Daily Task Auto-Completion Check
     if (userDoc.currentDailyTask && !userDoc.currentDailyTask.completed) {
       const text = message.content.toLowerCase();
       let taskCompleted = false;
 
-      if (userDoc.currentDailyTask.id === 'greet' && (text.includes('good morning') || text.includes('goodnight') || text.includes('good night'))) {
+      if (userDoc.currentDailyTask.id === 'greet' && (text.includes('good morning') || text.includes('goodnight') || text.includes('kem chhe') || text.includes('su chale chhe'))) {
         taskCompleted = true;
       } else if (userDoc.currentDailyTask.id === 'compliment' && (text.includes('pretty') || text.includes('cute') || text.includes('beautiful') || text.includes('love you'))) {
         taskCompleted = true;
@@ -60,7 +60,7 @@ export const execute = async (message) => {
 
     await saveUserData(userDoc);
 
-    // 5. Handle Voice Messages (Audio attachments)
+    // 6. Handle Voice Messages (Audio attachments)
     const audioAttachment = message.attachments.find(att =>
       att.contentType?.startsWith('audio/') ||
       att.name?.endsWith('.ogg') ||
@@ -70,7 +70,7 @@ export const execute = async (message) => {
     );
 
     if (audioAttachment) {
-      message.channel.sendTyping().catch(() => {});
+      await message.channel.sendTyping().catch(() => {});
       try {
         const transcribedText = await transcribeVoiceAttachment(audioAttachment.url);
         message.reply(`🎤 *[Voice Transcription]* "${transcribedText}"`).catch(() => {});
@@ -88,23 +88,32 @@ export const execute = async (message) => {
         return;
       } catch (voiceErr) {
         logger.error('Voice processing error:', voiceErr);
-        await message.reply("🎤 I heard your voice message, but I had trouble decoding the audio! Tell me in text? 💕");
+        await message.reply("Arey thodi technical issue aavi gayi baka! Wait kar thodi vaar... 🥺");
         return;
       }
     }
 
-    // 6. Natural Chat Decision: reply if mentioned OR 20% random chance (1 in 5)
-    const shouldReply = isMentioned || (isBoundChannel && Math.random() < config.randomChatChance);
+    // 7. Clean User Input: strip bot mention regex
+    let cleanUserText = message.content.replace(/<@!?\d+>/g, '').trim();
 
-    if (shouldReply) {
-      await message.channel.sendTyping().catch(() => {});
-      const cleanUserText = message.content.replace(/<@!?\d+>/g, '').trim() || 'Hello!';
+    // If message is completely empty after stripping mention, reply with default greeting
+    if (!cleanUserText) {
+      cleanUserText = "Kem chhe, Baka! Su chale chhe?";
+    }
+
+    // 8. Trigger Discord Typing Indicator and Reply with Gemini AI Response
+    await message.channel.sendTyping().catch(() => {});
+
+    try {
       const aiReply = await generateChatReply(message.member?.displayName || message.author.username, cleanUserText, userDoc);
       await saveUserData(userDoc);
       await message.reply(aiReply);
+    } catch (aiErr) {
+      logger.error('AI generation error:', aiErr);
+      await message.reply("Arey thodi technical issue aavi gayi baka! Wait kar thodi vaar... 🥺");
     }
 
-    // 7. Spontaneous Random Event Trigger (5% chance)
+    // 9. Spontaneous Random Event Trigger (5% chance in bound channel)
     if (isBoundChannel && Math.random() < config.randomEventChance) {
       setTimeout(() => {
         triggerRandomEvent(message.channel);
@@ -113,5 +122,6 @@ export const execute = async (message) => {
 
   } catch (error) {
     logger.error('Error handling messageCreate event:', error);
+    await message.reply("Arey thodi technical issue aavi gayi baka! Wait kar thodi vaar... 🥺").catch(() => {});
   }
 };
