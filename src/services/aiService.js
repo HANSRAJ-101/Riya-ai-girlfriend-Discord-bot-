@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import axios from 'axios';
 import { config } from '../config.js';
 import { getRelationshipTitle } from './rpgService.js';
 import { logger } from '../utils/logger.js';
@@ -111,11 +112,9 @@ const saveUserMemory = (userDoc, key, value) => {
 };
 
 /**
- * Generates AI chat response using OpenAI GPT-4o
+ * Generates AI chat response using Google Gemini API or OpenAI API
  */
 export const generateChatReply = async (userName, userMessage, userDoc) => {
-  const openai = getOpenAIClient();
-
   extractAndSaveMemories(userDoc, userMessage);
 
   const systemPrompt = buildSystemPrompt(userName, userDoc.level || 1, userDoc.moodState || 'NEUTRAL', userDoc.memories || []);
@@ -127,32 +126,66 @@ export const generateChatReply = async (userName, userMessage, userDoc) => {
     userDoc.conversationHistory = userDoc.conversationHistory.slice(-10);
   }
 
-  if (!openai) {
-    logger.warn('OpenAI API Key not configured. Returning fallback Riya response.');
-    return getFallbackResponse(userDoc.moodState, userName);
+  // 1. Try Google Gemini API first if GEMINI_API_KEY is available
+  if (config.geminiApiKey && !config.geminiApiKey.includes('your_gemini_api_key')) {
+    try {
+      const contents = userDoc.conversationHistory.map(h => ({
+        role: h.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: h.content }]
+      }));
+
+      // Try gemini-2.5-flash then gemini-1.5-flash
+      const response = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.geminiApiKey}`,
+        {
+          system_instruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents,
+          generationConfig: {
+            maxOutputTokens: 300,
+            temperature: 0.85
+          }
+        },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
+      );
+
+      if (response.data && response.data.candidates && response.data.candidates[0].content) {
+        const aiReply = response.data.candidates[0].content.parts[0].text;
+        userDoc.conversationHistory.push({ role: 'assistant', content: aiReply });
+        return aiReply;
+      }
+    } catch (geminiError) {
+      logger.warn(`Gemini API call failed, attempting OpenAI fallback: ${geminiError.message}`);
+    }
   }
 
-  try {
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...userDoc.conversationHistory.map(h => ({ role: h.role, content: h.content }))
-    ];
+  // 2. Try OpenAI API as fallback
+  const openai = getOpenAIClient();
+  if (openai) {
+    try {
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...userDoc.conversationHistory.map(h => ({ role: h.role, content: h.content }))
+      ];
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 300,
-      temperature: 0.85
-    });
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages,
+        max_tokens: 300,
+        temperature: 0.85
+      });
 
-    const aiReply = completion.choices[0].message.content;
-    userDoc.conversationHistory.push({ role: 'assistant', content: aiReply });
-
-    return aiReply;
-  } catch (error) {
-    logger.error('Error calling OpenAI API:', error);
-    return getFallbackResponse(userDoc.moodState, userName);
+      const aiReply = completion.choices[0].message.content;
+      userDoc.conversationHistory.push({ role: 'assistant', content: aiReply });
+      return aiReply;
+    } catch (openaiError) {
+      logger.error('Error calling OpenAI API:', openaiError);
+    }
   }
+
+  // 3. Fallback preset responses if no API key or network failure
+  return getFallbackResponse(userDoc.moodState, userName);
 };
 
 const getFallbackResponse = (moodState, userName) => {
