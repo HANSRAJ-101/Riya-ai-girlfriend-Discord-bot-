@@ -9,6 +9,7 @@ import * as kissCmd from '../commands/kiss.js';
 import * as dateCmd from '../commands/date.js';
 import * as rpsCmd from '../commands/rps.js';
 import * as guessCmd from '../commands/guess.js';
+import * as leaderboardCmd from '../commands/leaderboard.js';
 
 const commands = new Map([
   ['select_channel', selectChannelCmd],
@@ -19,7 +20,8 @@ const commands = new Map([
   ['kiss', kissCmd],
   ['date', dateCmd],
   ['rps', rpsCmd],
-  ['guess', guessCmd]
+  ['guess', guessCmd],
+  ['leaderboard', leaderboardCmd]
 ]);
 
 export const name = 'interactionCreate';

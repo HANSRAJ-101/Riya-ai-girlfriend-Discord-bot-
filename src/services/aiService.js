@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import axios from 'axios';
 import { config } from '../config.js';
-import { getRelationshipTitle } from './rpgService.js';
+import { getRelationshipTitle, isUserDailyPartner } from './rpgService.js';
 import { logger } from '../utils/logger.js';
 
 let openaiClient = null;
@@ -16,8 +16,9 @@ const getOpenAIClient = () => {
 /**
  * Builds system prompt for Riya - Amdavadi Gamer Girl Persona
  */
-export const buildSystemPrompt = (userName, level, moodState, memories = []) => {
-  const relationshipTitle = getRelationshipTitle(level);
+export const buildSystemPrompt = (userName, level, moodState, memories = [], userDoc = null) => {
+  const isPartner = isUserDailyPartner(userDoc);
+  const relationshipTitle = getRelationshipTitle(level, isPartner);
 
   let moodInstructions = '';
   switch (moodState) {
@@ -40,6 +41,11 @@ export const buildSystemPrompt = (userName, level, moodState, memories = []) => 
       moodInstructions = `Be sweet, supportive, and engaging!`;
   }
 
+  let partnerContext = '';
+  if (isPartner) {
+    partnerContext = `\n👑 SPECIAL DATING STATUS: ${userName} IS YOUR OFFICIAL PARTNER OF THE DAY! They won the #1 Top XP Leaderboard Champion spot and currently hold your Special Dating Tag: "${userDoc.datingTag}". Address them as your main partner/date, show extra sweet affection, and tell them how proud you are of their #1 rank! 💖✨\n`;
+  }
+
   let memoryContext = '';
   if (memories && memories.length > 0) {
     memoryContext = `\nImportant Memories You Remember About ${userName}:\n` +
@@ -52,6 +58,7 @@ Relationship Context:
 User Name: ${userName}
 Relationship Level: ${level} (${relationshipTitle})
 Current Mood State: ${moodState}
+${partnerContext}
 ${moodInstructions}
 ${memoryContext}
 
@@ -97,7 +104,7 @@ const saveUserMemory = (userDoc, key, value) => {
 export const generateChatReply = async (userName, userMessage, userDoc) => {
   extractAndSaveMemories(userDoc, userMessage);
 
-  const systemPrompt = buildSystemPrompt(userName, userDoc.level || 1, userDoc.moodState || 'NEUTRAL', userDoc.memories || []);
+  const systemPrompt = buildSystemPrompt(userName, userDoc.level || 1, userDoc.moodState || 'NEUTRAL', userDoc.memories || [], userDoc);
 
   if (!userDoc.conversationHistory) userDoc.conversationHistory = [];
   userDoc.conversationHistory.push({ role: 'user', content: userMessage });
@@ -106,7 +113,7 @@ export const generateChatReply = async (userName, userMessage, userDoc) => {
     userDoc.conversationHistory = userDoc.conversationHistory.slice(-10);
   }
 
-  // 1. Try Google Gemini API with robust model fallbacks (gemini-3.5-flash, gemini-3.6-flash, gemini-2.5-flash-lite)
+  // 1. Try Google Gemini API with robust model fallbacks
   if (config.geminiApiKey && !config.geminiApiKey.includes('your_gemini_api_key')) {
     const candidateModels = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-2.5-flash-lite'];
 
@@ -167,6 +174,6 @@ export const generateChatReply = async (userName, userMessage, userDoc) => {
     }
   }
 
-  // 3. If API calls fail, return warning response
+  // 3. Fallback error response
   return "Arey thodi technical issue aavi gayi baka! Wait kar thodi vaar... 🥺";
 };

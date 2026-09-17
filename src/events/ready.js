@@ -12,12 +12,13 @@ import * as kissCmd from '../commands/kiss.js';
 import * as dateCmd from '../commands/date.js';
 import * as rpsCmd from '../commands/rps.js';
 import * as guessCmd from '../commands/guess.js';
+import * as leaderboardCmd from '../commands/leaderboard.js';
 
 export const name = 'ready';
 export const once = true;
 
 export const execute = async (client) => {
-  logger.info(`Logged in successfully as ${client.user.tag}! Aura is ready to chat! 💕`);
+  logger.info(`Logged in successfully as ${client.user.tag}! Riya is ready to chat! 💕`);
 
   const commands = [
     selectChannelCmd.data.toJSON(),
@@ -28,7 +29,8 @@ export const execute = async (client) => {
     kissCmd.data.toJSON(),
     dateCmd.data.toJSON(),
     rpsCmd.data.toJSON(),
-    guessCmd.data.toJSON()
+    guessCmd.data.toJSON(),
+    leaderboardCmd.data.toJSON()
   ];
 
   const rest = new REST({ version: '10' }).setToken(config.discordToken);
