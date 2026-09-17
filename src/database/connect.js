@@ -1,25 +1,23 @@
-import mongoose from 'mongoose';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
 
+let db = null;
 let isConnected = false;
 
 export const connectDatabase = async () => {
-  if (!config.mongoUri || config.mongoUri.includes('username:password')) {
-    logger.warn('MongoDB URI is not configured or using default template. Database operations will attempt local MongoDB fallback.');
-  }
-
   try {
-    mongoose.set('strictQuery', false);
-    await mongoose.connect(config.mongoUri, {
-      serverSelectionTimeoutMS: 5000
-    });
+    const app = getApps().length === 0 ? initializeApp(config.firebaseConfig) : getApp();
+    db = getFirestore(app);
     isConnected = true;
-    logger.info('Successfully connected to MongoDB Database.');
+    logger.info(`Successfully initialized Firebase Firestore DB (Project ID: ${config.firebaseConfig.projectId})`);
   } catch (error) {
-    logger.error('Failed to connect to MongoDB Database. Bot will run with limited persistent state until DB is reachable.', error);
+    logger.error('Failed to initialize Firebase Firestore DB. Falling back to in-memory store.', error);
     isConnected = false;
   }
+  return db;
 };
 
+export const getDb = () => db;
 export const getDbStatus = () => isConnected;

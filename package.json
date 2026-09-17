@@ -1,7 +1,7 @@
 {
   "name": "ai-girlfriend-discord-bot",
   "version": "1.0.0",
-  "description": "Production-ready AI Girlfriend Discord Bot with dynamic mood, voice transcription, TTS, RPG leveling, memory, and mini-games.",
+  "description": "Production-ready AI Girlfriend Discord Bot (Riya Persona) powered by Firebase Firestore, Google Gemini API, Whisper, TTS, and Discord.js v14.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -12,12 +12,11 @@
     "discord-bot",
     "discord.js",
     "ai-girlfriend",
-    "openai",
-    "gpt-4o",
+    "firebase",
+    "firestore",
+    "gemini-api",
     "whisper",
-    "tts",
-    "rpg",
-    "mini-games"
+    "tts"
   ],
   "author": "Antigravity AI",
   "license": "MIT",
@@ -26,8 +25,8 @@
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "firebase": "^11.1.0",
     "form-data": "^4.0.1",
-    "mongoose": "^8.9.1",
     "openai": "^4.77.0"
   }
 }
