@@ -8,8 +8,12 @@ export const data = new SlashCommandBuilder()
   .setDescription('View top Affection XP users and Riya\'s Official Daily Dating Partner!');
 
 export const execute = async (interaction) => {
+  // Defer reply immediately to prevent Discord 3-second timeout on database queries
+  await interaction.deferReply().catch(() => {});
+
   try {
-    const leaderboard = await getGuildLeaderboard(interaction.guildId, 10);
+    const guildId = interaction.guildId || 'dm';
+    const leaderboard = await getGuildLeaderboard(guildId, 10);
 
     const embed = new EmbedBuilder()
       .setColor('#FF1493')
@@ -17,14 +21,14 @@ export const execute = async (interaction) => {
       .setDescription('The top users in the server competing for Riya\'s affection!')
       .setFooter({ text: 'The #1 Champion gets an exclusive 24-Hour Special Date invitation with Riya!' });
 
-    if (leaderboard.length === 0) {
+    if (!leaderboard || leaderboard.length === 0) {
       embed.setDescription('No user stats found yet! Start chatting with Riya to get on the leaderboard! ☕✨');
     } else {
       let text = '';
       leaderboard.forEach((u, index) => {
         const medal = index === 0 ? '👑 #1' : index === 1 ? '🥈 #2' : index === 2 ? '🥉 #3' : `#${index + 1}`;
         const tagStatus = isUserDailyPartner(u) ? ` \`[${u.datingTag}]\`` : '';
-        text += `${medal} <@${u.userId}> — Level **${u.level}** (${u.xp} XP)${tagStatus}\n`;
+        text += `${medal} <@${u.userId}> — Level **${u.level || 1}** (${u.xp || 0} XP)${tagStatus}\n`;
       });
       embed.addFields({ name: '📊 Top Champions', value: text });
     }
@@ -36,18 +40,20 @@ export const execute = async (interaction) => {
 
     const row = new ActionRowBuilder().addComponents(inviteBtn);
 
-    const replyMsg = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+    const replyMsg = await interaction.editReply({ embeds: [embed], components: [row] });
 
     const filter = i => i.customId === 'trigger_daily_date_invite';
     const collector = replyMsg.createMessageComponentCollector({ filter, time: 60000 });
 
     collector.on('collect', async i => {
       await i.reply({ content: '💌 Triggering daily dating invitation in the channel...', ephemeral: true });
-      await triggerDailyDatingInvite(interaction.guild, interaction.client);
+      if (interaction.guild) {
+        await triggerDailyDatingInvite(interaction.guild, interaction.client);
+      }
     });
 
   } catch (error) {
     logger.error('Error executing /leaderboard command:', error);
-    await interaction.reply({ content: '❌ Failed to fetch leaderboard.', ephemeral: true });
+    await interaction.editReply({ content: '❌ Failed to fetch leaderboard.' }).catch(() => {});
   }
 };
