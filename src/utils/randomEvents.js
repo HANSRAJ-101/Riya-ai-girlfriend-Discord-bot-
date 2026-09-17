@@ -1,6 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { logger } from './logger.js';
-import { addXp, saveUserData, getUserData } from '../database/models/User.js';
+import { saveUserData, getUserData } from '../database/models/User.js';
+import { addXp } from '../services/rpgService.js';
 
 const EVENTS = [
   {
