@@ -42,6 +42,19 @@ export const execute = async (client) => {
       { body: commands }
     );
     logger.info('Successfully registered all slash commands globally! ✨');
+
+    // Also register per-guild for instant update without waiting for global cache propagation
+    for (const [guildId, guild] of client.guilds.cache) {
+      try {
+        await rest.put(
+          Routes.applicationGuildCommands(config.clientId, guildId),
+          { body: commands }
+        );
+        logger.info(`Instantly registered slash commands for guild: ${guild.name} (${guildId}) ✨`);
+      } catch (gErr) {
+        logger.error(`Failed to register slash commands for guild ${guildId}:`, gErr);
+      }
+    }
   } catch (error) {
     logger.error('Failed to register slash commands:', error);
   }

@@ -1,3 +1,8 @@
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { getDb } from '../database/connect.js';
+import { getUserData, saveUserData } from '../database/models/User.js';
+import { logger } from '../utils/logger.js';
+
 /**
  * RPG & Relationship Leveling System
  */
@@ -85,4 +90,55 @@ export const DAILY_TASKS = [
 
 export const getRandomDailyTask = () => {
   return DAILY_TASKS[Math.floor(Math.random() * DAILY_TASKS.length)];
+};
+
+export const getGuildLeaderboard = async (guildId, limitCount = 10) => {
+  const db = getDb();
+  let users = [];
+
+  if (db) {
+    try {
+      const usersRef = collection(db, 'users');
+      let q;
+      if (guildId && guildId !== 'dm') {
+        q = query(usersRef, where('guildId', '==', guildId));
+      } else {
+        q = query(usersRef);
+      }
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        users.push(doc.data());
+      });
+    } catch (err) {
+      logger.warn(`Failed to fetch leaderboard from Firestore: ${err.message}`);
+    }
+  }
+
+  // Calculate total score for sorting (Level * 1000 + XP)
+  users.sort((a, b) => {
+    const scoreA = ((a.level || 1) * 1000) + (a.xp || 0);
+    const scoreB = ((b.level || 1) * 1000) + (b.xp || 0);
+    return scoreB - scoreA;
+  });
+
+  return users.slice(0, limitCount);
+};
+
+export const getTopUserOfGuild = async (guildId) => {
+  const leaderboard = await getGuildLeaderboard(guildId, 1);
+  return leaderboard.length > 0 ? leaderboard[0] : null;
+};
+
+export const activateDailyPartner = async (userId, guildId) => {
+  const userDoc = await getUserData(userId, guildId);
+  userDoc.isDailyPartner = true;
+  userDoc.datingTag = "👑 Riya's Official Partner of the Day 💖";
+  userDoc.dailyPartnerExpiresAt = new Date(Date.now() + 86400000).toISOString();
+  await saveUserData(userDoc);
+  return userDoc;
+};
+
+export const isUserDailyPartner = (userDoc) => {
+  if (!userDoc || !userDoc.isDailyPartner || !userDoc.dailyPartnerExpiresAt) return false;
+  return new Date(userDoc.dailyPartnerExpiresAt) > new Date();
 };

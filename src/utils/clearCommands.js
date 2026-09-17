@@ -12,6 +12,7 @@ import * as kissCmd from '../commands/kiss.js';
 import * as dateCmd from '../commands/date.js';
 import * as rpsCmd from '../commands/rps.js';
 import * as guessCmd from '../commands/guess.js';
+import * as leaderboardCmd from '../commands/leaderboard.js';
 
 const activeCommands = [
   selectChannelCmd.data.toJSON(),
@@ -22,7 +23,8 @@ const activeCommands = [
   kissCmd.data.toJSON(),
   dateCmd.data.toJSON(),
   rpsCmd.data.toJSON(),
-  guessCmd.data.toJSON()
+  guessCmd.data.toJSON(),
+  leaderboardCmd.data.toJSON()
 ];
 
 const clearAndReRegisterCommands = async () => {
