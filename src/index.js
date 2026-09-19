@@ -57,13 +57,16 @@ process.on('uncaughtException', (error) => {
 const startBot = async () => {
   await connectDatabase();
   
-  if (!config.discordToken || config.discordToken.includes('your_discord_bot_token')) {
-    logger.error('Cannot login: DISCORD_TOKEN is missing or invalid in .env!');
+  const token = (config.discordToken || '').trim().replace(/^["']|["']$/g, '');
+
+  if (!token || token.includes('your_discord_bot_token')) {
+    logger.error('Cannot login: DISCORD_TOKEN is missing or invalid in environment!');
     return;
   }
 
   try {
-    await client.login(config.discordToken);
+    logger.info('Attempting Discord client login...');
+    await client.login(token);
   } catch (error) {
     logger.error('Failed to log in to Discord:', error);
   }
