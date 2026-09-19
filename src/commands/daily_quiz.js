@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { DAILY_QUIZZES, addXp } from '../services/rpgService.js';
-import { addBalance, formatMoney } from '../services/economyService.js';
+import { addBalance, deductBalance, formatMoney } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -31,7 +31,7 @@ export const execute = async (interaction) => {
       .setColor('#FF69B4')
       .setTitle('📝 Daily Girlfriend Quiz')
       .setDescription(`**Question:**\n${quiz.question}`)
-      .setFooter({ text: 'Select your answer below! You have 45 seconds.' });
+      .setFooter({ text: 'Select your answer below! Correct = +$10,000 | Wrong = -$5,000' });
 
     const row = new ActionRowBuilder();
     quiz.options.forEach((opt, index) => {
@@ -72,9 +72,10 @@ export const execute = async (interaction) => {
 
         await i.reply({ content: replyText });
       } else {
+        await deductBalance(userDoc, 5000);
         await saveUserData(userDoc);
         await i.reply({
-          content: `❌ Oops! That wasn't the right answer, but Riya still loves that you tried! Come back tomorrow for another quiz! 💕`
+          content: `❌ Oops! That wasn't the right answer! You lost **-$5,000 Bank Balance (50% Loss Penalty)**! Come back tomorrow for another quiz! 💸💕`
         });
       }
 

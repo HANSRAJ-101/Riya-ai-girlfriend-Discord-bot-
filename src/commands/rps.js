@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { addXp } from '../services/rpgService.js';
-import { addBalance } from '../services/economyService.js';
+import { addBalance, deductBalance } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -15,7 +15,7 @@ export const execute = async (interaction) => {
     const embed = new EmbedBuilder()
       .setColor('#9400D3')
       .setTitle('✂️ Rock, Paper, Scissors with Riya')
-      .setDescription('Choose your move below, Baka! Beat Riya to win **+50 Affection XP** & **+$5,000 Cash**!')
+      .setDescription('Choose your move below, Baka! Win = **+$5,000 Cash** | Loss = **-$2,500 Cash (50% Loss Penalty)**!')
       .setFooter({ text: 'You have 30 seconds to make your choice.' });
 
     const row = new ActionRowBuilder().addComponents(
@@ -57,7 +57,9 @@ export const execute = async (interaction) => {
           resultMsg += `\n🎊 **LEVEL UP!** You reached **Level ${xpResult.newLevel}**!`;
         }
       } else {
-        resultMsg += `😜 **Riya Wins!** Riya sticks out her tongue: *"Hehe! Gamer skill right there! Next round is on you!"* 🎮🔥`;
+        await deductBalance(userDoc, 2500);
+        await saveUserData(userDoc);
+        resultMsg += `😜 **Riya Wins!** Riya sticks out her tongue: *"Hehe! Gamer skill right there!"* **Lost -$2,500 Cash (50% Penalty)!** 💸🎮🔥`;
       }
 
       await i.reply({ content: resultMsg });

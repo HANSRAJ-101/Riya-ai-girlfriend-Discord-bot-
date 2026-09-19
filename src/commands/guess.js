@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { addXp } from '../services/rpgService.js';
-import { addBalance } from '../services/economyService.js';
+import { addBalance, deductBalance } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -17,7 +17,7 @@ export const execute = async (interaction) => {
     const embed = new EmbedBuilder()
       .setColor('#FF69B4')
       .setTitle('🎲 Guess Riya\'s Secret Number (1 - 10)')
-      .setDescription('Riya is thinking of a number from **1 to 10**! Click a button below to guess, Baka!\n\nGuess right to earn **+75 Affection XP** & **+$10,000 Cash**!')
+      .setDescription('Riya is thinking of a number from **1 to 10**! Click a button below to guess, Baka!\n\nCorrect = **+$10,000 Cash** | Wrong = **-$5,000 Cash (50% Loss Penalty)**!')
       .setFooter({ text: 'You have 30 seconds.' });
 
     const row1 = new ActionRowBuilder();
@@ -54,9 +54,10 @@ export const execute = async (interaction) => {
         }
         await i.reply({ content: winMsg });
       } else {
+        await deductBalance(userDoc, 5000);
         await saveUserData(userDoc);
         await i.reply({
-          content: `❌ Aww, so close! You guessed **${guessedNum}**, but Riya was thinking of **${targetNumber}**! Try again next time, Baka! 💕`
+          content: `❌ Aww, so close! You guessed **${guessedNum}**, but Riya was thinking of **${targetNumber}**!\n\n💸 **Lost -$5,000 Cash (50% Loss Penalty)!** Try again next time, Baka! 💕`
         });
       }
 
