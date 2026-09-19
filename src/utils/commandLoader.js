@@ -7,7 +7,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const commandsDir = path.resolve(__dirname, '../commands');
 
+let cachedMap = null;
+let cachedJSON = null;
+
 export const loadAllCommands = async () => {
+  if (cachedMap && cachedJSON) {
+    return { commandsMap: cachedMap, commandsJSON: cachedJSON };
+  }
+
   const commandsMap = new Map();
   const commandsJSON = [];
 
@@ -33,6 +40,9 @@ export const loadAllCommands = async () => {
   } catch (err) {
     logger.error('Failed to read commands directory:', err);
   }
+
+  cachedMap = commandsMap;
+  cachedJSON = commandsJSON;
 
   return { commandsMap, commandsJSON };
 };

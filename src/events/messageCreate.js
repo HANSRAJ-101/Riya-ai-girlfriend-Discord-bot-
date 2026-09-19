@@ -10,12 +10,17 @@ import { logger } from '../utils/logger.js';
 
 import { addBalance, formatMoney } from '../services/economyService.js';
 import { addFriendXp } from '../services/friendService.js';
+import { handlePrefixCommand } from '../utils/prefixAdapter.js';
 
 export const name = 'messageCreate';
 
 export const execute = async (message) => {
   // 1. Ignore all messages sent by bots
   if (message.author.bot) return;
+
+  // 2. Process Prefix Commands (e.g. xhelp, xdaily, xcard_drop, xbank_balance, k!help, etc.)
+  const isPrefixCmd = await handlePrefixCommand(message);
+  if (isPrefixCmd) return;
 
   const guildConfig = await getGuildConfig(message.guildId);
   const isBoundChannel = guildConfig.boundChannelId && guildConfig.boundChannelId === message.channel.id;
