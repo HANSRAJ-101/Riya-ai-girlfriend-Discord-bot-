@@ -41,7 +41,7 @@ export const execute = async (interaction) => {
     const embed = new EmbedBuilder()
       .setColor('#FF69B4')
       .setTitle('📌 Your Daily Girlfriend Task')
-      .setDescription(`**Task:** ${task.description}\n\n**Reward:** **+${task.xpReward} Affection XP**`)
+      .setDescription(`**Task:** ${task.description}\n\n**Reward:** **+${task.xpReward} Affection XP** & **+$10,000 Bank Balance** 💸`)
       .addFields({ name: 'Status', value: task.completed ? '✅ Completed!' : '⌛ In Progress (Perform the action in chat to auto-complete!)' })
       .setFooter({ text: 'Daily tasks reset every 24 hours!' });
 

@@ -1,11 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { addXp } from '../services/rpgService.js';
+import { addBalance } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('rps')
-  .setDescription('Play Rock, Paper, Scissors against Riya for bonus Affection XP!');
+  .setDescription('Play Rock, Paper, Scissors against Riya for bonus Affection XP and money!');
 
 export const execute = async (interaction) => {
   try {
@@ -14,7 +15,7 @@ export const execute = async (interaction) => {
     const embed = new EmbedBuilder()
       .setColor('#9400D3')
       .setTitle('✂️ Rock, Paper, Scissors with Riya')
-      .setDescription('Choose your move below, Baka! Beat Riya to win **+50 Affection XP**!')
+      .setDescription('Choose your move below, Baka! Beat Riya to win **+50 Affection XP** & **+$5,000 Cash**!')
       .setFooter({ text: 'You have 30 seconds to make your choice.' });
 
     const row = new ActionRowBuilder().addComponents(
@@ -38,17 +39,20 @@ export const execute = async (interaction) => {
       let resultMsg = `You chose **${emojis[userChoice]}** | Riya chose **${emojis[botChoice]}**\n\n`;
 
       if (userChoice === botChoice) {
-        resultMsg += `🤝 **It's a Tie!** Riya laughs: *"Arrey Baka, great minds think alike!"* ☕`;
+        await addBalance(userDoc, 2500);
+        await saveUserData(userDoc);
+        resultMsg += `🤝 **It's a Tie!** Riya laughs: *"Arrey Baka, great minds think alike!"* **+$2,500 Cash!** 💸☕`;
       } else if (
         (userChoice === 'rock' && botChoice === 'scissors') ||
         (userChoice === 'paper' && botChoice === 'rock') ||
         (userChoice === 'scissors' && botChoice === 'paper')
       ) {
+        await addBalance(userDoc, 5000);
         const xpResult = addXp(userDoc, 50);
         userDoc.moodScore = Math.min(100, (userDoc.moodScore || 50) + 5);
         await saveUserData(userDoc);
 
-        resultMsg += `🎉 **YOU WIN!** Riya claps her hands: *"Bov mast! You beat me fair and square, Baka!"* **+50 Affection XP!** 💕`;
+        resultMsg += `🎉 **YOU WIN!** Riya claps her hands: *"Bov mast! You beat me fair and square, Baka!"* **+50 Affection XP & +$5,000 Cash!** 💸💕`;
         if (xpResult.leveledUp) {
           resultMsg += `\n🎊 **LEVEL UP!** You reached **Level ${xpResult.newLevel}**!`;
         }

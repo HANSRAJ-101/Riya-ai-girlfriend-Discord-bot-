@@ -2,15 +2,25 @@ import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, But
 import { fetchGif } from '../services/tenorService.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { addXp } from '../services/rpgService.js';
+import { getBalance, deductBalance, formatMoney } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('date')
-  .setDescription('Initiate an interactive text-based virtual date with Riya!');
+  .setDescription('Initiate an interactive text-based virtual date with Riya! (Costs $10,000)');
 
 export const execute = async (interaction) => {
   try {
     const userDoc = await getUserData(interaction.user.id, interaction.guildId);
+
+    const DATE_COST = 10000;
+    if (!await deductBalance(userDoc, DATE_COST)) {
+      const currentBalance = getBalance(userDoc);
+      return await interaction.reply({
+        content: `❌ **Insufficient Bank Balance!** A romantic date with Riya costs **$10,000**, but your current balance is **${formatMoney(currentBalance)}**!\n\nEarn cash by chatting, or completing \`/daily_quiz\`, \`/daily_task\`, \`/rps\`, or \`/guess\`! 💸☕`,
+        ephemeral: true
+      });
+    }
 
     if (userDoc.moodState === 'ANGRY') {
       return await interaction.reply({

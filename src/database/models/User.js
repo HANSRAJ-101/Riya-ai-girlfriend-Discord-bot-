@@ -19,6 +19,11 @@ export const getUserData = async (userId, guildId) => {
       if (userSnap.exists()) {
         const data = userSnap.data();
         data._docId = docId;
+        data.balance = data.balance !== undefined ? data.balance : 10000;
+        data.inventory = data.inventory || [];
+        data.friends = data.friends || {};
+        data.friendRequests = data.friendRequests || [];
+        data.partnerId = data.partnerId || null;
         data.save = async function () {
           return await saveUserData(this);
         };
@@ -30,6 +35,11 @@ export const getUserData = async (userId, guildId) => {
           guildId,
           xp: 0,
           level: 1,
+          balance: 10000,
+          inventory: [],
+          friends: {},
+          friendRequests: [],
+          partnerId: null,
           moodScore: 50,
           moodState: 'NEUTRAL',
           memories: [],
@@ -60,6 +70,11 @@ export const getUserData = async (userId, guildId) => {
       guildId,
       xp: 0,
       level: 1,
+      balance: 10000,
+      inventory: [],
+      friends: {},
+      friendRequests: [],
+      partnerId: null,
       moodScore: 50,
       moodState: 'NEUTRAL',
       memories: [],
@@ -70,7 +85,13 @@ export const getUserData = async (userId, guildId) => {
       save: async function () { return this; }
     });
   }
-  return memoryFallbackUsers.get(key);
+  const user = memoryFallbackUsers.get(key);
+  if (user.balance === undefined) user.balance = 10000;
+  if (!user.inventory) user.inventory = [];
+  if (!user.friends) user.friends = {};
+  if (!user.friendRequests) user.friendRequests = [];
+  if (user.partnerId === undefined) user.partnerId = null;
+  return user;
 };
 
 export const saveUserData = async (userData) => {

@@ -2,11 +2,12 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { fetchGif } from '../services/tenorService.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { addXp } from '../services/rpgService.js';
+import { getBalance, deductBalance, formatMoney } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('hug')
-  .setDescription('Give a warm hug to Riya or another user!')
+  .setDescription('Give a warm hug to Riya or another user! (Costs $200)')
   .addUserOption(option =>
     option.setName('user')
       .setDescription('The user you want to hug (leave empty to hug Riya)')
@@ -15,11 +16,18 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction) => {
   try {
-    const targetUser = interaction.options.getUser('user') || interaction.client.user;
-    const isBot = targetUser.id === interaction.client.user.id;
-    const gifUrl = await fetchGif('hug');
-
     const userDoc = await getUserData(interaction.user.id, interaction.guildId);
+
+    const HUG_COST = 200;
+    if (!await deductBalance(userDoc, HUG_COST)) {
+      const currentBalance = getBalance(userDoc);
+      return await interaction.reply({
+        content: `❌ **Insufficient Bank Balance!** A hug costs **$200**, but your current balance is **${formatMoney(currentBalance)}**!\n\nEarn cash by chatting, or completing \`/daily_quiz\`, \`/daily_task\`, \`/rps\`, or \`/guess\`! 🫂💸`,
+        ephemeral: true
+      });
+    }
+
+    const targetUser = interaction.options.getUser('user') || interaction.client.user;
 
     let messageText = '';
     if (isBot) {

@@ -1,11 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { DAILY_QUIZZES, addXp } from '../services/rpgService.js';
+import { addBalance, formatMoney } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('daily_quiz')
-  .setDescription('Take a daily relationship quiz with Aura to earn bonus Affection XP!');
+  .setDescription('Take a daily relationship quiz with Riya to earn bonus Affection XP and $10,000!');
 
 export const execute = async (interaction) => {
   try {
@@ -58,11 +59,13 @@ export const execute = async (interaction) => {
       userDoc.lastDailyQuiz = new Date();
 
       if (selectedIndex === quiz.correctAnswer) {
+        const QUIZ_MONEY_REWARD = 10000;
+        await addBalance(userDoc, QUIZ_MONEY_REWARD);
         const xpResult = addXp(userDoc, quiz.xpReward);
         userDoc.moodScore = Math.min(100, (userDoc.moodScore || 50) + 10);
         await saveUserData(userDoc);
 
-        let replyText = `🎉 **Correct Answer!** Aura is super impressed! You earned **+${quiz.xpReward} Affection XP**! 💕`;
+        let replyText = `🎉 **Correct Answer!** Riya is super impressed! You earned **+${quiz.xpReward} Affection XP** and **+$10,000 Bank Balance**! 💸💕`;
         if (xpResult.leveledUp) {
           replyText += `\n🎊 **LEVEL UP!** You are now **Relationship Level ${xpResult.newLevel}**!`;
         }
@@ -71,7 +74,7 @@ export const execute = async (interaction) => {
       } else {
         await saveUserData(userDoc);
         await i.reply({
-          content: `❌ Oops! That wasn't the right answer, but Aura still loves that you tried! Come back tomorrow for another quiz! 💕`
+          content: `❌ Oops! That wasn't the right answer, but Riya still loves that you tried! Come back tomorrow for another quiz! 💕`
         });
       }
 

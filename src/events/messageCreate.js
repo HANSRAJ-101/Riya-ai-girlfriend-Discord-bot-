@@ -8,6 +8,9 @@ import { triggerRandomEvent } from '../utils/randomEvents.js';
 import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
 
+import { addBalance, formatMoney } from '../services/economyService.js';
+import { addFriendXp } from '../services/friendService.js';
+
 export const name = 'messageCreate';
 
 export const execute = async (message) => {
@@ -34,10 +37,32 @@ export const execute = async (message) => {
       await message.react(emoji).catch(err => logger.debug(`Failed to react with emoji: ${err.message}`));
     }
 
-    // 4. Grant Affection XP for chatting
-    const xpResult = addXp(userDoc, 10);
+    // Check for Greetings bonus (+30 XP & +$500 Cash)
+    const lowerContent = message.content.toLowerCase();
+    const isGreeting = lowerContent.includes('good morning') || lowerContent.includes('good afternoon') || lowerContent.includes('good night') || lowerContent.includes('good evening');
+    const xpEarned = isGreeting ? 40 : 10;
+    const cashDrop = isGreeting ? 500 : Math.floor(Math.random() * 250) + 50;
+
+    await addBalance(userDoc, cashDrop);
+
+    // 4. Grant Affection XP & Level Check
+    const xpResult = addXp(userDoc, xpEarned);
     if (xpResult.leveledUp) {
-      message.channel.send(`🎊 **LEVEL UP!** <@${message.author.id}>, your relationship with Riya grew to **Level ${xpResult.newLevel}**! 💕`).catch(() => {});
+      const LEVEL_UP_BONUS = 10000;
+      await addBalance(userDoc, LEVEL_UP_BONUS);
+      message.channel.send(`🎊 **LEVEL UP!** <@${message.author.id}>, your relationship with Riya grew to **Level ${xpResult.newLevel}**! You earned a **+$10,000 Bank Balance Bonus**! 💸💕`).catch(() => {});
+    }
+
+    // 4b. Friend Emoji Relationship Leveling Check
+    const mentionedUsers = message.mentions.users.filter(u => !u.bot && u.id !== message.author.id);
+    const hasEmojis = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(message.content);
+    if (mentionedUsers.size > 0 && hasEmojis && userDoc.friends) {
+      for (const [targetId, targetUser] of mentionedUsers) {
+        if (userDoc.friends[targetId]) {
+          const targetDoc = await getUserData(targetId, message.guildId);
+          await addFriendXp(userDoc, targetDoc, 15);
+        }
+      }
     }
 
     // 5. Daily Task Auto-Completion Check

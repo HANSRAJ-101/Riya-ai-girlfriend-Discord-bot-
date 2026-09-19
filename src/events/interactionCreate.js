@@ -10,6 +10,10 @@ import * as dateCmd from '../commands/date.js';
 import * as rpsCmd from '../commands/rps.js';
 import * as guessCmd from '../commands/guess.js';
 import * as leaderboardCmd from '../commands/leaderboard.js';
+import * as bankBalanceCmd from '../commands/bank_balance.js';
+import * as giftCmd from '../commands/gift.js';
+import * as addBankBalanceCmd from '../commands/add_bank_balance.js';
+import * as friendCmd from '../commands/friend.js';
 
 const commands = new Map([
   ['select_channel', selectChannelCmd],
@@ -21,7 +25,11 @@ const commands = new Map([
   ['date', dateCmd],
   ['rps', rpsCmd],
   ['guess', guessCmd],
-  ['leaderboard', leaderboardCmd]
+  ['leaderboard', leaderboardCmd],
+  ['bank_balance', bankBalanceCmd],
+  ['gift', giftCmd],
+  ['add_bank_balance', addBankBalanceCmd],
+  ['friend', friendCmd]
 ]);
 
 export const name = 'interactionCreate';

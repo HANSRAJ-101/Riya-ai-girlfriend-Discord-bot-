@@ -1,11 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { getUserData, saveUserData } from '../database/models/User.js';
 import { addXp } from '../services/rpgService.js';
+import { addBalance } from '../services/economyService.js';
 import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('guess')
-  .setDescription('Guess a secret number between 1 and 10 that Riya is thinking of!');
+  .setDescription('Guess a secret number between 1 and 10 that Riya is thinking of for cash and XP!');
 
 export const execute = async (interaction) => {
   try {
@@ -16,7 +17,7 @@ export const execute = async (interaction) => {
     const embed = new EmbedBuilder()
       .setColor('#FF69B4')
       .setTitle('🎲 Guess Riya\'s Secret Number (1 - 10)')
-      .setDescription('Riya is thinking of a number from **1 to 10**! Click a button below to guess, Baka!\n\nGuess right to earn **+75 Affection XP**!')
+      .setDescription('Riya is thinking of a number from **1 to 10**! Click a button below to guess, Baka!\n\nGuess right to earn **+75 Affection XP** & **+$10,000 Cash**!')
       .setFooter({ text: 'You have 30 seconds.' });
 
     const row1 = new ActionRowBuilder();
@@ -42,11 +43,12 @@ export const execute = async (interaction) => {
       const guessedNum = parseInt(i.customId.replace('guess_num_', ''), 10);
 
       if (guessedNum === targetNumber) {
+        await addBalance(userDoc, 10000);
         const xpResult = addXp(userDoc, 75);
         userDoc.moodScore = Math.min(100, (userDoc.moodScore || 50) + 10);
         await saveUserData(userDoc);
 
-        let winMsg = `🎯 **BINGO!** The secret number was **${targetNumber}**!\n\nRiya gasps: *"Arrey Baka! Are you reading my mind?! You guessed it perfectly!"* **+75 Affection XP!** 💖✨☕`;
+        let winMsg = `🎯 **BINGO!** The secret number was **${targetNumber}**!\n\nRiya gasps: *"Arrey Baka! Are you reading my mind?! You guessed it perfectly!"* **+75 Affection XP & +$10,000 Cash!** 💸💖✨☕`;
         if (xpResult.leveledUp) {
           winMsg += `\n🎊 **LEVEL UP!** You are now **Relationship Level ${xpResult.newLevel}**!`;
         }
