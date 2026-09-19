@@ -16,6 +16,13 @@ export const getGuildConfig = async (guildId) => {
       if (guildSnap.exists()) {
         const data = guildSnap.data();
         data._guildId = guildId;
+        data.boundChannelId = data.boundChannelId || null;
+        data.emojiquizChannelId = data.emojiquizChannelId || null;
+        data.antonymquizChannelId = data.antonymquizChannelId || null;
+        data.countingChannelId = data.countingChannelId || null;
+        data.currentCountingNumber = data.currentCountingNumber || 0;
+        data.lastCountingUserId = data.lastCountingUserId || null;
+        data.language = data.language || 'en';
         data.save = async function () {
           return await saveGuildConfig(this);
         };
@@ -25,6 +32,12 @@ export const getGuildConfig = async (guildId) => {
           _guildId: guildId,
           guildId,
           boundChannelId: null,
+          emojiquizChannelId: null,
+          antonymquizChannelId: null,
+          countingChannelId: null,
+          currentCountingNumber: 0,
+          lastCountingUserId: null,
+          language: 'en',
           updatedAt: new Date().toISOString()
         };
         newConfig.save = async function () {
@@ -43,10 +56,19 @@ export const getGuildConfig = async (guildId) => {
       _guildId: guildId,
       guildId,
       boundChannelId: null,
+      emojiquizChannelId: null,
+      antonymquizChannelId: null,
+      countingChannelId: null,
+      currentCountingNumber: 0,
+      lastCountingUserId: null,
+      language: 'en',
       save: async function () { return this; }
     });
   }
-  return memoryFallbackGuilds.get(guildId);
+  const config = memoryFallbackGuilds.get(guildId);
+  if (config.currentCountingNumber === undefined) config.currentCountingNumber = 0;
+  if (config.language === undefined) config.language = 'en';
+  return config;
 };
 
 export const saveGuildConfig = async (guildConfig) => {

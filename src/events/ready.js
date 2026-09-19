@@ -17,6 +17,23 @@ import * as bankBalanceCmd from '../commands/bank_balance.js';
 import * as giftCmd from '../commands/gift.js';
 import * as addBankBalanceCmd from '../commands/add_bank_balance.js';
 import * as friendCmd from '../commands/friend.js';
+import * as dailyCmd from '../commands/daily.js';
+import * as accountCmd from '../commands/account.js';
+import * as profileCmd from '../commands/profile.js';
+import * as inventoryCmd from '../commands/inventory.js';
+import * as shopCmd from '../commands/shop.js';
+import * as transactionsCmd from '../commands/transactions.js';
+import * as aboutCmd from '../commands/about.js';
+import * as helpCmd from '../commands/help.js';
+import * as settingsCmd from '../commands/settings.js';
+import * as languageCmd from '../commands/language.js';
+import * as emojiquizCmd from '../commands/emojiquiz.js';
+import * as antonymquizCmd from '../commands/antonymquiz.js';
+import * as countingCmd from '../commands/counting.js';
+import * as connectfourCmd from '../commands/connectfour.js';
+import * as memoryCmd from '../commands/memory.js';
+import * as triviaquizCmd from '../commands/triviaquiz.js';
+import * as guessthenumberCmd from '../commands/guessthenumber.js';
 
 export const name = 'ready';
 export const once = true;
@@ -38,7 +55,24 @@ export const execute = async (client) => {
     bankBalanceCmd.data.toJSON(),
     giftCmd.data.toJSON(),
     addBankBalanceCmd.data.toJSON(),
-    friendCmd.data.toJSON()
+    friendCmd.data.toJSON(),
+    dailyCmd.data.toJSON(),
+    accountCmd.data.toJSON(),
+    profileCmd.data.toJSON(),
+    inventoryCmd.data.toJSON(),
+    shopCmd.data.toJSON(),
+    transactionsCmd.data.toJSON(),
+    aboutCmd.data.toJSON(),
+    helpCmd.data.toJSON(),
+    settingsCmd.data.toJSON(),
+    languageCmd.data.toJSON(),
+    emojiquizCmd.data.toJSON(),
+    antonymquizCmd.data.toJSON(),
+    countingCmd.data.toJSON(),
+    connectfourCmd.data.toJSON(),
+    memoryCmd.data.toJSON(),
+    triviaquizCmd.data.toJSON(),
+    guessthenumberCmd.data.toJSON()
   ];
 
   const rest = new REST({ version: '10' }).setToken(config.discordToken);

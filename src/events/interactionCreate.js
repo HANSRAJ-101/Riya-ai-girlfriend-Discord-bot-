@@ -14,6 +14,23 @@ import * as bankBalanceCmd from '../commands/bank_balance.js';
 import * as giftCmd from '../commands/gift.js';
 import * as addBankBalanceCmd from '../commands/add_bank_balance.js';
 import * as friendCmd from '../commands/friend.js';
+import * as dailyCmd from '../commands/daily.js';
+import * as accountCmd from '../commands/account.js';
+import * as profileCmd from '../commands/profile.js';
+import * as inventoryCmd from '../commands/inventory.js';
+import * as shopCmd from '../commands/shop.js';
+import * as transactionsCmd from '../commands/transactions.js';
+import * as aboutCmd from '../commands/about.js';
+import * as helpCmd from '../commands/help.js';
+import * as settingsCmd from '../commands/settings.js';
+import * as languageCmd from '../commands/language.js';
+import * as emojiquizCmd from '../commands/emojiquiz.js';
+import * as antonymquizCmd from '../commands/antonymquiz.js';
+import * as countingCmd from '../commands/counting.js';
+import * as connectfourCmd from '../commands/connectfour.js';
+import * as memoryCmd from '../commands/memory.js';
+import * as triviaquizCmd from '../commands/triviaquiz.js';
+import * as guessthenumberCmd from '../commands/guessthenumber.js';
 
 const commands = new Map([
   ['select_channel', selectChannelCmd],
@@ -29,7 +46,24 @@ const commands = new Map([
   ['bank_balance', bankBalanceCmd],
   ['gift', giftCmd],
   ['add_bank_balance', addBankBalanceCmd],
-  ['friend', friendCmd]
+  ['friend', friendCmd],
+  ['daily', dailyCmd],
+  ['account', accountCmd],
+  ['profile', profileCmd],
+  ['inventory', inventoryCmd],
+  ['shop', shopCmd],
+  ['transactions', transactionsCmd],
+  ['about', aboutCmd],
+  ['help', helpCmd],
+  ['settings', settingsCmd],
+  ['language', languageCmd],
+  ['emojiquiz', emojiquizCmd],
+  ['antonymquiz', antonymquizCmd],
+  ['counting', countingCmd],
+  ['connectfour', connectfourCmd],
+  ['memory', memoryCmd],
+  ['triviaquiz', triviaquizCmd],
+  ['guessthenumber', guessthenumberCmd]
 ]);
 
 export const name = 'interactionCreate';

@@ -5,24 +5,39 @@ import { logger } from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('leaderboard')
-  .setDescription('View top Affection XP users and Riya\'s Official Daily Dating Partner!');
+  .setDescription('View top minigame, quiz, and XP leaderboards!')
+  .addSubcommand(sub => sub.setName('xp').setDescription('Shows you a leaderboard with the most active minigames players'))
+  .addSubcommand(sub => sub.setName('emojiquiz').setDescription('Shows you the top 10 emojiquiz players'))
+  .addSubcommand(sub => sub.setName('antonymquiz').setDescription('Shows you the top 10 antonymquiz players'))
+  .addSubcommand(sub => sub.setName('triviaquiz').setDescription('Shows you the top 10 triviaquiz players'))
+  .addSubcommand(sub => sub.setName('connectfour').setDescription('Shows the Connect Four leaderboard'))
+  .addSubcommand(sub => sub.setName('counting').setDescription('Shows you the top 10 counting servers'));
 
 export const execute = async (interaction) => {
-  // Defer reply immediately to prevent Discord 3-second timeout on database queries
   await interaction.deferReply().catch(() => {});
 
   try {
+    const subcommand = interaction.options.getSubcommand() || 'xp';
     const guildId = interaction.guildId || 'dm';
     const leaderboard = await getGuildLeaderboard(guildId, 10);
 
+    const titles = {
+      xp: '🏆 Riya\'s Affection & XP Leaderboard',
+      emojiquiz: '🧩 Top 10 EmojiQuiz Champions',
+      antonymquiz: '📝 Top 10 AntonymQuiz Champions',
+      triviaquiz: '❓ Top 10 TriviaQuiz Champions',
+      connectfour: '🔴🟡 Top Connect Four Champions',
+      counting: '🔢 Top Counting Server Champions'
+    };
+
     const embed = new EmbedBuilder()
       .setColor('#FF1493')
-      .setTitle('🏆 Riya\'s Affection XP Leaderboard')
-      .setDescription('The top users in the server competing for Riya\'s affection!')
+      .setTitle(titles[subcommand] || '🏆 Leaderboard')
+      .setDescription('Top players competing on the leaderboard!')
       .setFooter({ text: 'The #1 Champion gets an exclusive 24-Hour Special Date invitation with Riya!' });
 
     if (!leaderboard || leaderboard.length === 0) {
-      embed.setDescription('No user stats found yet! Start chatting with Riya to get on the leaderboard! ☕✨');
+      embed.setDescription('No stats found yet! Play minigames and chat with Riya to get on the leaderboard! ☕✨');
     } else {
       let text = '';
       leaderboard.forEach((u, index) => {
