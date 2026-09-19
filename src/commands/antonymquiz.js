@@ -25,11 +25,11 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction) => {
   try {
-    const subcommand = interaction.options.getSubcommand();
+    const subcommand = interaction.options.getSubcommand(false) || 'help';
     const guildConfig = await getGuildConfig(interaction.guildId);
 
     if (subcommand === 'setchannel') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return await interaction.reply({ content: '❌ Administrator permissions required!', ephemeral: true });
       }
       const channel = interaction.options.getChannel('channel');
@@ -45,7 +45,7 @@ export const execute = async (interaction) => {
     }
 
     if (subcommand === 'removechannel') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return await interaction.reply({ content: '❌ Administrator permissions required!', ephemeral: true });
       }
       guildConfig.antonymquizChannelId = null;
@@ -53,14 +53,19 @@ export const execute = async (interaction) => {
       return await interaction.reply({ content: '✅ AntonymQuiz channel binding removed.' });
     }
 
-    if (subcommand === 'help') {
+    if (subcommand === 'help' || !subcommand) {
       const embed = new EmbedBuilder()
         .setColor('#FF69B4')
         .setTitle('📝 How to Play AntonymQuiz')
         .setDescription(
           `• Riya posts a word (e.g. **"Hot"**)\n` +
           `• Type the opposite word (e.g. **"Cold"**) directly in the channel!\n` +
-          `• Correct answer earns **+$1,000 Cash** & XP!`
+          `• Correct answer earns **+$1,000 Cash** & XP!\n\n` +
+          `**Subcommands:**\n` +
+          `• \`/antonymquiz setchannel <channel>\` - Bind active channel\n` +
+          `• \`/antonymquiz removechannel\` - Unbind channel\n` +
+          `• \`/antonymquiz help\` - View rules\n` +
+          `• \`/antonymquiz repair\` - Status check`
         );
 
       return await interaction.reply({ embeds: [embed] });

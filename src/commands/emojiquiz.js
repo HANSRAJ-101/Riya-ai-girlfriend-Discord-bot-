@@ -29,11 +29,11 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction) => {
   try {
-    const subcommand = interaction.options.getSubcommand();
+    const subcommand = interaction.options.getSubcommand(false) || 'help';
     const guildConfig = await getGuildConfig(interaction.guildId);
 
     if (subcommand === 'setchannel') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return await interaction.reply({ content: '❌ Administrator permissions required!', ephemeral: true });
       }
       const channel = interaction.options.getChannel('channel');
@@ -49,7 +49,7 @@ export const execute = async (interaction) => {
     }
 
     if (subcommand === 'removechannel') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return await interaction.reply({ content: '❌ Administrator permissions required!', ephemeral: true });
       }
       guildConfig.emojiquizChannelId = null;
@@ -57,15 +57,19 @@ export const execute = async (interaction) => {
       return await interaction.reply({ content: '✅ EmojiQuiz channel binding removed.' });
     }
 
-    if (subcommand === 'help') {
+    if (subcommand === 'help' || !subcommand) {
       const embed = new EmbedBuilder()
         .setColor('#FF69B4')
         .setTitle('🧩 How to Play EmojiQuiz')
         .setDescription(
           `• Riya posts emoji word puzzles (e.g. \`👨‍💼✉️📦\` = **Postman**)\n` +
           `• Type your answer directly in the bound channel!\n` +
-          `• First user to guess correctly receives **+$1,000 Cash** & XP!\n` +
-          `• Use the **Skip (100)** button if you get stuck!`
+          `• First user to guess correctly receives **+$1,000 Cash** & XP!\n\n` +
+          `**Subcommands:**\n` +
+          `• \`/emojiquiz setchannel <channel>\` - Set game channel\n` +
+          `• \`/emojiquiz removechannel\` - Unbind channel\n` +
+          `• \`/emojiquiz help\` - View rules\n` +
+          `• \`/emojiquiz settings\` - View status & repair`
         );
 
       return await interaction.reply({ embeds: [embed] });

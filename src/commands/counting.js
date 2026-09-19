@@ -21,11 +21,11 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction) => {
   try {
-    const subcommand = interaction.options.getSubcommand();
+    const subcommand = interaction.options.getSubcommand(false) || 'help';
     const guildConfig = await getGuildConfig(interaction.guildId);
 
     if (subcommand === 'setchannel') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return await interaction.reply({ content: '❌ Administrator permissions required!', ephemeral: true });
       }
       const channel = interaction.options.getChannel('channel');
@@ -46,7 +46,7 @@ export const execute = async (interaction) => {
     }
 
     if (subcommand === 'removechannel') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
         return await interaction.reply({ content: '❌ Administrator permissions required!', ephemeral: true });
       }
       guildConfig.countingChannelId = null;
@@ -54,7 +54,7 @@ export const execute = async (interaction) => {
       return await interaction.reply({ content: '✅ Counting game channel binding removed.' });
     }
 
-    if (subcommand === 'help') {
+    if (subcommand === 'help' || !subcommand) {
       const embed = new EmbedBuilder()
         .setColor('#FF69B4')
         .setTitle('🔢 How to Play Counting Game')
@@ -62,7 +62,11 @@ export const execute = async (interaction) => {
           `• Server members take turns counting upwards sequentially (\`1\`, \`2\`, \`3\`...)\n` +
           `• You cannot count twice in a row!\n` +
           `• Typing an incorrect number resets the count back to \`0\`!\n` +
-          `• High streaks earn massive cash & XP rewards for everyone!`
+          `• High streaks earn massive cash & XP rewards for everyone!\n\n` +
+          `**Subcommands:**\n` +
+          `• \`/counting setchannel <channel>\` - Bind counting channel\n` +
+          `• \`/counting removechannel\` - Unbind channel\n` +
+          `• \`/counting help\` - View rules`
         );
 
       return await interaction.reply({ embeds: [embed] });
