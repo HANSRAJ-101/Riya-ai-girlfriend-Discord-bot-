@@ -1,6 +1,20 @@
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 
 const CATEGORIES = {
+  anime_card: {
+    label: '🎴 Anime Card Collection (Karuta Style)',
+    value: 'anime_card',
+    description: '160,000+ Anime Collectible Cards, Drops, Grabs, Wishlists & Trades',
+    commands: [
+      { name: '/card_drop', desc: 'Drop a set of 4 anime cards with interactive 1️⃣2️⃣3️⃣4️⃣ grab buttons.' },
+      { name: '/card_view <code>', desc: 'View high-res card image, print #, condition & owner details.' },
+      { name: '/card_collection [user]', desc: 'Inspect your or another user\'s collected anime cards.' },
+      { name: '/card_wishlist [action] [character]', desc: 'Manage your waifu/husbando wishlist.' },
+      { name: '/card_burn <code>', desc: 'Destroy a card to extract Gold cash & Dust resources.' },
+      { name: '/card_trade <user> <your_code> <their_code>', desc: 'Trade anime cards with another player.' },
+      { name: '/card_lookup <character>', desc: 'Search anime character database & drop stats.' }
+    ]
+  },
   rpg: {
     label: '⚔️ RPG Combat & Attributes',
     value: 'rpg',
@@ -155,12 +169,13 @@ const CATEGORIES = {
 
 export const data = new SlashCommandBuilder()
   .setName('help')
-  .setDescription('Displays the complete directory of all 75 Riya slash commands!')
+  .setDescription('Displays the complete directory of all slash commands including Anime Cards!')
   .addStringOption(option =>
     option.setName('category')
       .setDescription('Filter commands by category')
       .setRequired(false)
       .addChoices(
+        { name: '🎴 Anime Card Collection (Karuta Style)', value: 'anime_card' },
         { name: '⚔️ RPG Combat & Attributes', value: 'rpg' },
         { name: '🌍 Exploration & Mining', value: 'exploration' },
         { name: '🎰 Casino & Gambling', value: 'casino' },
@@ -212,7 +227,7 @@ export const execute = async (interaction) => {
     .setTitle('📖 Riya AI Girlfriend - Master Slash Commands Directory')
     .setColor('#FF1493')
     .setDescription(
-      'Welcome to Riya\'s official command directory! **All 75 slash commands** are active and fully operational!\n\n' +
+      'Welcome to Riya\'s official command directory! Featuring the brand new **🎴 Anime Card Collection System (Karuta Style)**!\n\n' +
       'Use the dropdown menu below or `/help category:<choice>` to inspect command details for any category:'
     )
     .addFields(
@@ -222,7 +237,7 @@ export const execute = async (interaction) => {
         inline: true
       }))
     )
-    .setFooter({ text: 'Riya AI Girlfriend • 75 Active Commands Registered' });
+    .setFooter({ text: 'Riya AI Girlfriend • Active Commands Registered' });
 
   let initialEmbed = selectedCat ? buildCategoryEmbed(selectedCat) : buildOverviewEmbed();
   if (!initialEmbed) initialEmbed = buildOverviewEmbed();
