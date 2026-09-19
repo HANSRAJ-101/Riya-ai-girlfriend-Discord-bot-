@@ -214,7 +214,7 @@ export const execute = async (interaction) => {
       .setTitle(`📖 ${cat.label}`)
       .setColor('#FF69B4')
       .setDescription(`*${cat.description}*\n\nHere are all **${cat.commands.length} commands** in this category:`)
-      .setFooter({ text: 'Riya AI Girlfriend • Type / to use any command!' });
+      .setFooter({ text: 'Riya AI Girlfriend • Works with both Slash (/) and Prefix (x or k!)' });
 
     for (const cmd of cat.commands) {
       embed.addFields({ name: `\`${cmd.name}\``, value: cmd.desc, inline: false });
@@ -224,11 +224,12 @@ export const execute = async (interaction) => {
   };
 
   const buildOverviewEmbed = () => new EmbedBuilder()
-    .setTitle('📖 Riya AI Girlfriend - Master Slash Commands Directory')
+    .setTitle('📖 Riya AI Girlfriend - Master Commands Directory (Slash & Prefix x)')
     .setColor('#FF1493')
     .setDescription(
       'Welcome to Riya\'s official command directory! Featuring the brand new **🎴 Anime Card Collection System (Karuta Style)**!\n\n' +
-      'Use the dropdown menu below or `/help category:<choice>` to inspect command details for any category:'
+      '✨ **Dual Command Support**: All 82 commands work via both **Slash Commands (`/`)** and **Text Prefix (`x` or `k!`)** (e.g., `xhelp`, `xdrop`, `xdaily`, `xbank_balance`, `xdate`, `xkiss`, `xhug`, `xantonymquiz`, etc.)!\n\n' +
+      'Use the dropdown menu below or `/help category:<choice>` / `xhelp` to inspect details for any category:'
     )
     .addFields(
       Object.values(CATEGORIES).map(cat => ({
@@ -237,7 +238,7 @@ export const execute = async (interaction) => {
         inline: true
       }))
     )
-    .setFooter({ text: 'Riya AI Girlfriend • Active Commands Registered' });
+    .setFooter({ text: 'Riya AI Girlfriend • 82 Commands • Prefix: x or k!' });
 
   let initialEmbed = selectedCat ? buildCategoryEmbed(selectedCat) : buildOverviewEmbed();
   if (!initialEmbed) initialEmbed = buildOverviewEmbed();
