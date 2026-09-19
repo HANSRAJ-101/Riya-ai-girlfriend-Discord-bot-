@@ -20,10 +20,16 @@ export const getUserData = async (userId, guildId) => {
         const data = userSnap.data();
         data._docId = docId;
         data.balance = data.balance !== undefined ? data.balance : 10000;
+        data.bank = data.bank !== undefined ? data.bank : 0;
+        data.hp = data.hp !== undefined ? data.hp : 100;
+        data.maxHp = data.maxHp !== undefined ? data.maxHp : 100;
+        data.attributes = data.attributes || { strength: 1, defense: 1, agility: 1, luck: 1 };
+        data.cooldowns = data.cooldowns || {};
         data.inventory = data.inventory || [];
         data.friends = data.friends || {};
         data.friendRequests = data.friendRequests || [];
         data.partnerId = data.partnerId || null;
+        data.gangId = data.gangId || null;
         data.save = async function () {
           return await saveUserData(this);
         };
@@ -36,10 +42,16 @@ export const getUserData = async (userId, guildId) => {
           xp: 0,
           level: 1,
           balance: 10000,
+          bank: 0,
+          hp: 100,
+          maxHp: 100,
+          attributes: { strength: 1, defense: 1, agility: 1, luck: 1 },
+          cooldowns: {},
           inventory: [],
           friends: {},
           friendRequests: [],
           partnerId: null,
+          gangId: null,
           moodScore: 50,
           moodState: 'NEUTRAL',
           memories: [],
@@ -71,10 +83,16 @@ export const getUserData = async (userId, guildId) => {
       xp: 0,
       level: 1,
       balance: 10000,
+      bank: 0,
+      hp: 100,
+      maxHp: 100,
+      attributes: { strength: 1, defense: 1, agility: 1, luck: 1 },
+      cooldowns: {},
       inventory: [],
       friends: {},
       friendRequests: [],
       partnerId: null,
+      gangId: null,
       moodScore: 50,
       moodState: 'NEUTRAL',
       memories: [],
@@ -87,10 +105,16 @@ export const getUserData = async (userId, guildId) => {
   }
   const user = memoryFallbackUsers.get(key);
   if (user.balance === undefined) user.balance = 10000;
+  if (user.bank === undefined) user.bank = 0;
+  if (user.hp === undefined) user.hp = 100;
+  if (user.maxHp === undefined) user.maxHp = 100;
+  if (!user.attributes) user.attributes = { strength: 1, defense: 1, agility: 1, luck: 1 };
+  if (!user.cooldowns) user.cooldowns = {};
   if (!user.inventory) user.inventory = [];
   if (!user.friends) user.friends = {};
   if (!user.friendRequests) user.friendRequests = [];
   if (user.partnerId === undefined) user.partnerId = null;
+  if (user.gangId === undefined) user.gangId = null;
   return user;
 };
 
