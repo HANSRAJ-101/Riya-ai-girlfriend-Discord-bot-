@@ -28,6 +28,8 @@ export const execute = async (interaction) => {
     }
 
     const targetUser = interaction.options.getUser('user') || interaction.client.user;
+    const isBot = targetUser.id === interaction.client?.user?.id;
+    const gifUrl = await fetchGif('anime kiss');
 
     let messageText = '';
     if (isBot) {
@@ -48,8 +50,9 @@ export const execute = async (interaction) => {
 
     const embed = new EmbedBuilder()
       .setColor('#FF1493')
-      .setDescription(messageText)
-      .setImage(gifUrl);
+      .setDescription(messageText);
+
+    if (gifUrl) embed.setImage(gifUrl);
 
     await interaction.reply({ embeds: [embed] });
   } catch (error) {

@@ -28,8 +28,8 @@ export const data = new SlashCommandBuilder()
       ));
 
 export const execute = async (interaction) => {
-  const bet = interaction.options.getInteger('bet');
-  const selectedHorseId = interaction.options.getInteger('horse');
+  const bet = interaction.options.getInteger('bet') || 100;
+  const selectedHorseId = interaction.options.getInteger('horse') || 1;
   const user = interaction.user;
 
   if (bet < 100) return interaction.reply({ content: '❌ Minimum bet for Horse Racing is $100!', ephemeral: true });
@@ -43,7 +43,7 @@ export const execute = async (interaction) => {
   await deductBalance(userDoc, bet);
   await userDoc.save();
 
-  const chosenHorse = HORSES.find(h => h.id === selectedHorseId);
+  const chosenHorse = HORSES.find(h => h.id === selectedHorseId) || HORSES[0];
   const positions = [0, 0, 0, 0];
   const finishLine = 12;
   let winner = null;
@@ -55,7 +55,7 @@ export const execute = async (interaction) => {
       const pos = positions[i];
       const dotsBefore = '.'.repeat(pos);
       const dotsAfter = '.'.repeat(finishLine - pos);
-      const isChosen = h.id === selectedHorseId ? '⭐' : '';
+      const isChosen = h.id === chosenHorse.id ? '⭐' : '';
       trackText += `${isChosen} **${h.name}**: \`[${dotsBefore}${h.emoji}${dotsAfter}🚩]\`\n`;
     }
     return trackText;
@@ -83,7 +83,7 @@ export const execute = async (interaction) => {
     if (winner) {
       clearInterval(interval);
 
-      if (winner.id === selectedHorseId) {
+      if (winner.id === chosenHorse.id) {
         // WIN! 4x Payout
         const winAmount = bet * 4;
         const freshUser = await getUserData(user.id, interaction.guildId);

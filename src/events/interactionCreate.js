@@ -6,27 +6,42 @@ let commandsCache = null;
 export const name = 'interactionCreate';
 
 export const execute = async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
   if (!commandsCache) {
     const { commandsMap } = await loadAllCommands();
     commandsCache = commandsMap;
   }
 
-  const command = commandsCache.get(interaction.commandName);
-  if (!command) {
-    logger.warn(`No command matching ${interaction.commandName} was found.`);
+  // 1. Handle Slash Chat Input Commands
+  if (interaction.isChatInputCommand()) {
+    const command = commandsCache.get(interaction.commandName);
+    if (!command) {
+      logger.warn(`No command matching /${interaction.commandName} was found.`);
+      return;
+    }
+
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      logger.error(`Error executing slash command /${interaction.commandName}:`, error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: '❌ There was an error while executing this command!', ephemeral: true }).catch(() => {});
+      } else {
+        await interaction.reply({ content: '❌ There was an error while executing this command!', ephemeral: true }).catch(() => {});
+      }
+    }
     return;
   }
 
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    logger.error(`Error executing slash command /${interaction.commandName}:`, error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: '❌ There was an error while executing this command!', ephemeral: true }).catch(() => {});
-    } else {
-      await interaction.reply({ content: '❌ There was an error while executing this command!', ephemeral: true }).catch(() => {});
-    }
+  // 2. Handle Unhandled Component Interactions (Expired Buttons / Menus)
+  if (interaction.isButton() || interaction.isStringSelectMenu()) {
+    // If a button click wasn't consumed by an active collector within 2.5s, give friendly response
+    setTimeout(async () => {
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: '💡 This menu or button interaction has timed out or expired. Please run the slash command again!',
+          ephemeral: true
+        }).catch(() => {});
+      }
+    }, 2500);
   }
 };
